@@ -195,13 +195,13 @@ void Auto_Control_Led(void) { // Check CDS and Control LEDs
   if(bright_flag) {
     bright_flag = false;
 
-    if(initial_bright == ALLLEDOFF) {
+    if(initial_bright == ALLLEDOFF) { // Turn on LED
       if(bright_value <= LIMIT){
         initial_bright = ALLLEDON;
         change_led = ALLLEDON;
         bright_flag = true;
       }
-    } else if(initial_bright == ALLLEDON) {
+    } else if(initial_bright == ALLLEDON) { // Turn off LED
       if(bright_value >= BRIGHT) {
         initial_bright = ALLLEDOFF;
         change_led = ALLLEDOFF;
