@@ -93,8 +93,8 @@ void dmploop() {
     mpu.dmpGetQuaternion(&q, fifoBuffer);
     mpu.dmpGetGravity(&gravity, &q);
     mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-    ypr[1] = (ypr[1] * 180 / M_PI); //x
-    ypr[2] = (ypr[2] * 180 / M_PI); //y
+    ypr[1] = (ypr[1] * 180 / M_PI); //y
+    ypr[2] = (ypr[2] * 180 / M_PI); //x
     ypr[0] = (ypr[0] * 180 / M_PI); //z
     //gyro[0],gyro[1],gyro[2]//x,y,z 각속도값
   }
@@ -108,6 +108,3 @@ void loop() {
 
 
 }
-
-
-
