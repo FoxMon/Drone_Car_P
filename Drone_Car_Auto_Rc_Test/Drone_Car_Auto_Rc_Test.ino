@@ -1,6 +1,8 @@
 // Drone_Rc_Car_Test
-// 2020-03-10
+// 2020-03-12
 // LED_Ver_01
+// Remote_Control_Ver_01
+// Motor_Control_Ver_01
 
 #define LIMIT 200
 #define BRIGHT 800
@@ -16,32 +18,73 @@ enum { // enum of LEDs
   REARRIGHTBLINK = 'r',
 };
 
+enum { // enum of Drive
+  AUTODRIVE = 'O',
+  MANUAL = 'o',
+};
+
+enum { // enum of Drive Order for Serial
+  GO = 'g',
+  BACK = 'b',
+  LEFT = 'l',
+  RIGHT = 'r',
+  STOP = 's',
+  GOANDLEFT = 'u',
+  GOANDRIGHT = 'i',
+  BACKANDLEFT = 'o',
+  BACKANDRIGHT = 'p',
+};
+
+enum { // enum of Drive Order for Bluetooth
+  GO_B = 'G',
+  BACK_B = 'B',
+  LEFT_B = 'L',
+  RIGHT_B = 'R',
+  STOP_B = 'S',
+  GOANDLEFT_B = 'U',
+  GOANDRIGHT_B = 'I',
+  BACKANDLEFT_B = 'O',
+  BACKANDRIGHT_B = 'P',
+};
+
+enum { // enum of Speed
+  SPEED0 = '0',
+  SPEED1 = '1',
+  SPEED2 = '2',
+  SPEED3 = '3',
+};
+
 bool rear_left_led_flag = false; // Rear Blink Led Flag
 bool rear_right_led_flag = false;
 bool rear_left_blink = false;
 bool rear_right_blink = false;
 bool change_led_on_off = false; // Change Led On/Off Flag
 bool blink_led_on_off = false; // Blink Led
+bool control_change = false; // Check Control Change
+bool auto_drive_check = false; // Auto Drive Check
+bool change_drive_action = false; // Check drive action
+bool change_drive_speed =false; // Check drive speed
 
 char change_led = ALLLEDOFF; // Initial ALLLEDOFF
 char blink_led; // Blink Led Flag
+char remote_read; // Read User Input for control
+char run_drive = STOP; // Run drive!
+char drive_speed = SPEED0; // Drive Speed
 
 const int front_left_led = 2; // Front Left Led
 const int front_right_led = 3; // Front Right Led
 const int rear_left_led = 4; // Rear Left Led
 const int rear_right_led = 5; // Rear Right Led
+const int dirA = 6; // Left Motor
+const int dirB = 7; // Right Motor
+const int pwmA = 5;
+const int pwmB = 6;
 
 int bright_value; // Read Bright Value
 int initial_bright = ALLLEDOFF; // Initial Set_up LED status by brightness
 bool bright_flag = false; // Bright Flag
 
-void setup() {
-  Led_Set_Up(); // Initial Led_Set_Up
-}
-
-void loop() {
-  Led_Loop();
-}
+// unsigned int accel;
 
 void Led_Set_Up(void) { // Initial Led Set_Up
   // Left, Right LED Output
@@ -209,4 +252,214 @@ void Auto_Control_Led(void) { // Check CDS and Control LEDs
       }
     }
   }
+}
+
+void Remote_Control_Set(void) { // Set Remote Control ( Serial )
+  Serial.begin(9600); // Serial Speed
+}
+
+void Remote_Control_Loop(void) { // Loopin
+ Remote_User_input(); 
+ Check_Remote_Input();
+}
+
+void Remote_User_input(void) { // Check User Input
+  if(Serial.available()) {
+    char input = Serial.read();
+
+    if(input == AUTODRIVE) {
+      auto_drive_check = true;
+    }
+
+    if(auto_drive_check) {
+      if(input == MANUAL) {
+        auto_drive_check = false;
+      }
+    } else {
+      return;
+    }
+
+    // if emergency state ??
+
+    if(input != remote_read) {
+      remote_read = input;
+      control_change = true;
+    }
+  }
+}
+
+void Check_Remote_Input(void) { // Check Remote Control
+  if(control_change) {
+    control_change = false;
+
+     // Big -> Small
+     
+    if(remote_read == GO_B ||
+    remote_read == BACK_B ||
+    remote_read == LEFT_B ||
+    remote_read == RIGHT_B ||
+    remote_read == STOP_B ||
+    remote_read == GOANDLEFT_B ||
+    remote_read == GOANDRIGHT_B ||
+    remote_read == BACKANDLEFT_B ||
+    remote_read == BACKANDRIGHT_B) {
+      remote_read = (control_change - 'A') + 'a';
+    }
+
+    if(remote_read == GO ||
+    remote_read == BACK ||
+    remote_read == LEFT ||
+    remote_read == RIGHT ||
+    remote_read == STOP ||
+    remote_read == GOANDLEFT ||
+    remote_read == GOANDRIGHT ||
+    remote_read == BACKANDLEFT ||
+    remote_read == BACKANDRIGHT) {
+      run_drive = remote_read;
+      change_drive_action = true;
+    } else if(remote_read == SPEED0 ||
+    remote_read == SPEED1 ||
+    remote_read == SPEED2 ||
+    remote_read == SPEED3) {
+      drive_speed = remote_read;
+      change_drive_speed = true;
+    } else if(remote_read == FRONTLEDON || 
+    remote_read == FRONTLEDOFF ||
+    remote_read == REARLEDON ||
+    remote_read == REARLEDOFF ||
+    remote_read == ALLLEDON ||
+    remote_read == ALLLEDOFF) {
+      change_led = remote_read;
+      change_led_on_off = true;
+    } else if(remote_read == REARLEFTBLINK ||
+    remote_read == REARRIGHTBLINK) {
+      blink_led = remote_read;
+      blink_led_on_off = true;
+    } // add Horn
+  }
+}
+
+void Motor_SetUp(void) { // Motor SetUp
+  pinMode(dirA, OUTPUT);
+
+  digitalWrite(dirA, LOW);
+  analogWrite(pwmA, 0);
+
+  pinMode(dirB, OUTPUT);
+  
+  digitalWrite(dirB, LOW);
+  analogWrite(pwmB, 0);
+}
+
+void Motor_Loop(void) { // Motor Loop
+  Check_Drive_Action();
+  Check_Drive_Speed();
+}
+
+void Check_Drive_Action(void) { // Check Drive Mode
+  if(change_drive_action) {
+    change_drive_action = false;
+
+    if(run_drive == GO) {
+      Go_Forward();
+    } else if(run_drive == BACK) {
+      Go_Backward();
+    } else if(run_drive == LEFT) {
+      Turn_Left();
+    } else if(run_drive == RIGHT) {
+      Turn_Right();
+    } else if(run_drive == STOP) {
+      Stop_Drive();
+    } else if(run_drive == GOANDLEFT) {
+      Turn_Left();
+      
+      blink_led = REARLEFTBLINK;
+      blink_led_on_off = true;
+    } else if(run_drive == GOANDRIGHT) {
+      Turn_Right();
+
+      blink_led = REARRIGHTBLINK;
+      blink_led_on_off = true;
+    } else if(run_drive == BACKANDLEFT) {
+      Turn_Right();
+    } else if(run_drive == BACKANDRIGHT) {
+      Turn_Left();
+    }
+  }
+}
+
+void Go_Forward(void) { // GO
+  // extern unsigned int accel;
+
+  digitalWrite(dirA, HIGH);
+  // analogWrite(pwmA, 200 + accel);
+  analogWrite(pwmA, 200);
+  digitalWrite(dirB, HIGH);
+  // analogWrite(pwmB, 200 + accel);
+  analogWrite(pwmB, 200);
+}
+
+void Go_Backward(void) { // Back
+  digitalWrite(dirA, LOW);
+  analogWrite(pwmA, 200);
+  digitalWrite(dirB, LOW);
+  analogWrite(pwmB, 200);
+}
+
+void Turn_Left(void) { // Left
+  digitalWrite(dirA, LOW);
+  analogWrite(pwmA, 200);
+  digitalWrite(dirB, HIGH);
+  analogWrite(pwmB, 200);
+}
+
+void Turn_Right(void) { // Right
+  digitalWrite(dirA, HIGH);
+  analogWrite(pwmA, 200);
+  digitalWrite(dirB, LOW);
+  analogWrite(pwmB, 200);
+}
+
+void Stop_Drive(void) { // Stop
+  digitalWrite(dirA, LOW);
+  analogWrite(pwmA, 0);
+  digitalWrite(dirB, LOW);
+  analogWrite(pwmB, 0);
+
+  // extern unsigned inr accel;
+  // accel = 0;
+}
+
+void Check_Drive_Speed(void) { // Check Drive Speed Order
+  if(change_drive_speed) {
+    change_drive_speed = false;
+
+    Control_Drive_Speed();
+  }
+}
+
+void Control_Drive_Speed(void) { // Contrl Drive Speed
+  int car_speed = drive_speed;
+
+  if(car_speed != SPEED3) {
+    car_speed -= SPEED0;
+  } else {
+    car_speed = 10;
+  }
+
+  // accel = car_speed * (50/10.0);
+
+  change_drive_speed = true;
+}
+
+void setup(void) {
+  Motor_SetUp();
+  Remote_Control_Set();
+  Led_Set_Up();
+}
+
+void loop(void) {
+  Motor_Loop();
+  Remote_Control_Loop();
+  Led_Loop();
 }
