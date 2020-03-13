@@ -25,7 +25,7 @@ if(speak_buzzer){
       buzz_cnt = 0;
       speak_buzzer = false;
     }
-    else{
+    else if(buzz_cnt > 0){
       tone(buzzer_pin, 2000, buzz_cnt%2);
     }
    }
