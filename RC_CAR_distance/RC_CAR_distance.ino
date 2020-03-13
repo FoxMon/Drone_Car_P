@@ -11,7 +11,7 @@ attachPCINT(digitalPinToPCINT(echo), EchoIsr, CHANGE);
 }
 
 unsigned long distance = 50;
-bool fucking_distance = false;
+bool changed_distance = false;
 
 void EchoIsr (void){
   static volatile unsigned long start_echo = 0;
@@ -22,21 +22,21 @@ void EchoIsr (void){
   if(echo_pin_on == HIGH){
     start_echo = micros();
   }
-  else(
+  else{
     end_echo = micros();
     unsigned long duration = end_echo - start_echo;
     distance = duration / 58;
-    fucking_distance = true;
+    changed_distance = true;
   }
 }
 
 bool emergency_now = false;
-const int what_thing = 15; //cm
+static const int what_thing = 15; //cm
 
-void Distance_Checking(){
+void Distance_Checking(){ //거리별 위험도격상
   
-  if(fucking_distance){
-    fucking_distance = false;
+  if(changed_distance){
+    changed_distance = false;
 
     static int level = 0;
     if(level <= what_thing){
@@ -56,8 +56,16 @@ void Distance_Checking(){
   }
 }
 
-void Emergency_Loop(){
-  if(emergency_now)
+//void Emergency_Loop(){
+//  if(emergency_now)
+//}
+
+void setup(){
+  Distrance_Setup();
+}
+
+void loop(){
+  
 }
 
  
