@@ -33,6 +33,7 @@ attachPCINT(digitalPinToPCINT(echo), EchoIsr, CHANGE);
 void Distance_Loop(){
   Distance_Checking();
   Emergency_Checking();
+  //void Emergency_Car_Move();
 }
 
 
@@ -62,7 +63,7 @@ void Distance_Checking(){
     prev_time = curr_time;
 
     
-    if(!emergency_now) return; //비상이면 나감
+    if(emergency_now) return; //비상이면 나감
 
     
     Ultrasonic_Sensor();      //초음파 시작
@@ -101,6 +102,15 @@ void Emergency_Checking(){ //거리별 위험도격상
   }
 }
 
+//void Emergency_Car_Move(){
+//
+//  if(emergency_now){
+//    emergency_now = false;
+//
+//    //1. @@@@
+//    //2. @@@@
+//  }
+//}
 ///////////////////////////////////////////////////////////////부저
 const int buzzer_pin = 10;
 
