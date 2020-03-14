@@ -1,32 +1,32 @@
-// Angle
-// Test
+// Rotation Speed
+// Final Test
 // Roll, Pitch, Yaw
 // 2020-03-14
-// Just check for Drone's Angle
+// Check for Drone's motor speed and add Controll
 
-#include <Wire.h> // I2C
+#include <Wire.h>
 
 int throttle = 0; // amplifier
 
 void setup() {
   Serial.begin(115200);
 
-  Wire.begin(); // Start I2C
+  Wire.begin();
   Wire.setClock(400000);
 
-  Wire.beginTransmission(0x68); // start transmission
+  Wire.beginTransmission(0x68);
   Wire.write(0x6b);
   Wire.write(0x0);
-  Wire.endTransmission(true); // end transmission 
+  Wire.endTransmission(true);
 }
 
 void loop() {
   Wire.beginTransmission(0x68);
   // Wire.write(0x45);
   Wire.write(0x43);
-  Wire.endTransmission(false); // restart
+  Wire.endTransmission(false);
   // Wire.requestFrom(0x68, 2, true);
-  Wire.requestFrom(0x68, 6, true);  
+  Wire.requestFrom(0x68, 6, true);
 
   int16_t GyXH = Wire.read();
   int16_t GyXL = Wire.read();
@@ -38,11 +38,6 @@ void loop() {
   int16_t GyX = GyXH << 8|GyYL;
   int16_t GyY = GyYH << 8|GyYL;
   int16_t GyZ = GyZH << 8|GyYL;
-
-  /*
-  * GyY -> 0 
-  * +-0 average.
-  */
 
   static int32_t GyXSum = 0;
   static int32_t GyYSum = 0;
@@ -86,18 +81,15 @@ void loop() {
   static double AngleX = 0.0;
   static double AngleY = 0.0;
   static double AngleZ = 0.0;
-
+  
   AngleX += GyXR * dt;
   AngleY += GyYR * dt;
   AngleZ += GyZR * dt;
 
-  if(throttle == 0){
-    AngleX = AngleY = AngleZ = 0.0;
-  }
-
   static double tAngleX = 0.0;
   static double tAngleY = 0.0;
   static double tAngleZ = 0.0;
+  
   double eAngleX = tAngleX - AngleX;
   double eAngleY = tAngleY - AngleY;
   double eAngleZ = tAngleZ - AngleZ;
@@ -106,29 +98,52 @@ void loop() {
   double BalY = Kp * eAngleY;
   double BalZ = Kp * eAngleZ;
   double Kd = 1.0;
-
+  
   BalX += Kd *- GyXR;
   BalY += Kd *- GyYR;
   BalZ += Kd *- GyZR;
-  
+
   if(throttle == 0) {
     BalX = BalY = BalZ = 0.0;
   }
 
-  if(Serial.available() > 0){ // Bluetooth -> Serial1
+// For soft flight
+
+  double Ki = 1.0; // change Ki value ex) 0.5 , 1.5 , 2 etc...
+  static double ResX = 0.0, ResY = 0.0, ResZ = 0.0;
+
+  ResX += Ki * eAngleX * dt;
+  ResY += Ki * eAngleY * dt;
+  ResZ += Ki * eAngleZ * dt;
+
+  if(throttle == 0) {
+    ResX = ResY = ResZ = 0.0;
+  }
+
+  BalX += ResX;
+  BalY += ResY;
+  BalZ += ResX;
+
+  if(Serial.available() > 0) { // Bluetooth -> Serial1
     while(Serial.available() > 0){
       char userInput = Serial.read();
 
       if(userInput >= '0' && userInput <= '9'){
         throttle = (userInput - '0') * 25;
+      } else if(userInput == 'a'){ // Left
+      // tAngleY = -10.0;
+      } else if(userInput == 'd'){ // Right
+      // tAngleY = 10.0;
+      } else if(userInput == 's') { // Balance
+      // tAngleY = 0.0;
       }
     }
   }
 
-  double speedA = throttle + BalY; // motor A ~ D logic
-  double speedB = throttle - BalY;
-  double speedC = throttle - BalY;
-  double speedD = throttle + BalY;
+  double speedA = throttle + BalY + BalX + BalZ;
+  double speedB = throttle - BalY + BalX - BalZ;
+  double speedC = throttle - BalY - BalX + BalZ;
+  double speedD = throttle + BalY - BalX - BalZ;
   int iSpeedA = constrain((int)speedA, 0, 250);
   int iSpeedB = constrain((int)speedB, 0, 250);
   int iSpeedC = constrain((int)speedC, 0, 250);

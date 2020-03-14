@@ -1,7 +1,8 @@
 // Rotation
 // Test
 // Roll, Pitch, Yaw
-// 2020-03-09
+// 2020-03-14
+// Check for Drone's motor speed
 
 #include <Wire.h>
 
@@ -129,22 +130,4 @@ void loop() {
   analogWrite(11, iSpeedB);
   analogWrite(12, iSpeedC);
   analogWrite(13, iSpeedD);
-  
-  // static int cnt_loop;
-
-  // cnt_loop++;
-
-  // if((cnt_loop % 100) != 0){
-  //   return;
-  // }
-
-  // Serial.print("GyY = ");
-  // Serial.print(GyY);
-  // Serial.print("GyYresult = ");
-  // Serial.print(GyYresult);
-  // Serial.print("AngleY = ");
-  // Serial.print(AngleY);
-  // Serial.print(" | BalY = ");
-  // Serial.print(BalY);
-  // Serial.println();
 }
