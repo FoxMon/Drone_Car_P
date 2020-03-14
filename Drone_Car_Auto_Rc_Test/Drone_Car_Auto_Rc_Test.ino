@@ -20,31 +20,31 @@ enum { // enum of LEDs
 
 enum { // enum of Drive
   AUTODRIVE = 'O',
-  MANUAL = 'o',
+ // MANUAL = 'o',
 };
 
 enum { // enum of Drive Order for Serial
   GO = 'g',
   BACK = 'b',
   LEFT = 'l',
-  RIGHT = 'r',
+  RIGHT = 'x',
   STOP = 's',
   GOANDLEFT = 'u',
   GOANDRIGHT = 'i',
-  BACKANDLEFT = 'o',
-  BACKANDRIGHT = 'p',
+  BACKANDLEFT = 'y',
+  BACKANDRIGHT = 't',
 };
 
 enum { // enum of Drive Order for Bluetooth
   GO_B = 'G',
   BACK_B = 'B',
   LEFT_B = 'L',
-  RIGHT_B = 'R',
+  RIGHT_B = 'X',
   STOP_B = 'S',
   GOANDLEFT_B = 'U',
   GOANDRIGHT_B = 'I',
-  BACKANDLEFT_B = 'O',
-  BACKANDRIGHT_B = 'P',
+  BACKANDLEFT_B = 'Y',
+  BACKANDRIGHT_B = 'T',
 };
 
 enum { // enum of Speed
@@ -66,7 +66,7 @@ bool change_drive_action = false; // Check drive action
 bool change_drive_speed =false; // Check drive speed
 
 char change_led = ALLLEDOFF; // Initial ALLLEDOFF
-char blink_led; // Blink Led Flag
+char blink_led; // Blink Led
 char remote_read; // Read User Input for control
 char run_drive = STOP; // Run drive!
 char drive_speed = SPEED0; // Drive Speed
@@ -75,10 +75,10 @@ const int front_left_led = 2; // Front Left Led
 const int front_right_led = 3; // Front Right Led
 const int rear_left_led = 4; // Rear Left Led
 const int rear_right_led = 5; // Rear Right Led
-const int dirA = 6; // Left Motor
+const int dirA = 10; // Left Motor
 const int dirB = 7; // Right Motor
-const int pwmA = 5;
-const int pwmB = 6;
+const int pwmA = 0;
+const int pwmB = 0;
 
 int bright_value; // Read Bright Value
 int initial_bright = ALLLEDOFF; // Initial Set_up LED status by brightness
@@ -146,20 +146,20 @@ void Control_Rear_Left_Blink(void) { // Control Rear Left Led Blink
   static unsigned long previous_millis = 0; // Previous TIme
   static int count_blink = 0; // Counting variable
 
-  if(rear_left_blink) {
+  if(rear_left_blink) { 
     unsigned long cur_time = millis();
-
+    
     if((cur_time - previous_millis) >= duration_millis) {
       previous_millis = cur_time;
       count_blink++;
 
-      if(count_blink == 5) {
+      if(count_blink == 10) {
         count_blink = 0;  
         rear_left_blink = false;
         change_led_on_off = true;
+      } else {
+          digitalWrite(rear_left_led, count_blink%2);
       }
-    } else {
-      digitalWrite(rear_left_led, count_blink%2);
     }
   }
 }
@@ -169,20 +169,20 @@ void Control_Rear_Right_Blink(void) { // Control Rear Right Led Blink
   static unsigned long previous_millis = 0; // Previous TIme
   static int count_blink = 0; // Counting variable
 
-  if(rear_left_blink) {
+  if(rear_right_blink) {
     unsigned long cur_time = millis();
 
     if((cur_time - previous_millis) >= duration_millis) {
       previous_millis = cur_time;
       count_blink++;
 
-      if(count_blink == 5) {
+      if(count_blink == 10) {
         count_blink = 0;  
         rear_right_blink = false;
         change_led_on_off = true;
+      }     else {
+         digitalWrite(rear_right_led, count_blink%2);
       }
-    } else {
-      digitalWrite(rear_right_led, count_blink%2);
     }
   }
 }
@@ -217,7 +217,7 @@ void All_Light_Off(void) { // Turn off All of LEDs
   Rear_Light_Off();
 }
 
-void Brignt_Sensor_Loop() { // CDS Sensor
+void Bright_Sensor_Loop() { // CDS Sensor
   Read_Bright_Value(); // Read CDS
 }
 
@@ -266,24 +266,18 @@ void Remote_Control_Loop(void) { // Loopin
 void Remote_User_input(void) { // Check User Input
   if(Serial.available()) {
     char input = Serial.read();
-
+  
     if(input == AUTODRIVE) {
-      auto_drive_check = true;
+      auto_drive_check =  true;
     }
 
-    if(auto_drive_check) {
-      if(input == MANUAL) {
-        auto_drive_check = false;
-      }
-    } else {
-      return;
-    }
-
+ 
     // if emergency state ??
 
     if(input != remote_read) {
-      remote_read = input;
+      remote_read = input;    
       control_change = true;
+      //blink_led_on_off = true;   
     }
   }
 }
@@ -302,10 +296,10 @@ void Check_Remote_Input(void) { // Check Remote Control
     remote_read == GOANDLEFT_B ||
     remote_read == GOANDRIGHT_B ||
     remote_read == BACKANDLEFT_B ||
-    remote_read == BACKANDRIGHT_B) {
-      remote_read = (control_change - 'A') + 'a';
+    remote_read == BACKANDRIGHT_B )
+    {
+      remote_read = (remote_read - 'A') + 'a';
     }
-
     if(remote_read == GO ||
     remote_read == BACK ||
     remote_read == LEFT ||
@@ -314,16 +308,18 @@ void Check_Remote_Input(void) { // Check Remote Control
     remote_read == GOANDLEFT ||
     remote_read == GOANDRIGHT ||
     remote_read == BACKANDLEFT ||
-    remote_read == BACKANDRIGHT) {
+    remote_read == BACKANDRIGHT  ){
       run_drive = remote_read;
       change_drive_action = true;
-    } else if(remote_read == SPEED0 ||
+    } 
+    else if(remote_read == SPEED0 ||
     remote_read == SPEED1 ||
     remote_read == SPEED2 ||
     remote_read == SPEED3) {
       drive_speed = remote_read;
       change_drive_speed = true;
-    } else if(remote_read == FRONTLEDON || 
+    } 
+    else if(remote_read == FRONTLEDON || 
     remote_read == FRONTLEDOFF ||
     remote_read == REARLEDON ||
     remote_read == REARLEDOFF ||
@@ -331,7 +327,8 @@ void Check_Remote_Input(void) { // Check Remote Control
     remote_read == ALLLEDOFF) {
       change_led = remote_read;
       change_led_on_off = true;
-    } else if(remote_read == REARLEFTBLINK ||
+    } 
+    else if(remote_read == REARLEFTBLINK ||
     remote_read == REARRIGHTBLINK) {
       blink_led = remote_read;
       blink_led_on_off = true;
@@ -392,10 +389,10 @@ void Go_Forward(void) { // GO
   // extern unsigned int accel;
 
   digitalWrite(dirA, HIGH);
-  // analogWrite(pwmA, 200 + accel);
+//  analogWrite(pwmA, 200 + accel);
   analogWrite(pwmA, 200);
   digitalWrite(dirB, HIGH);
-  // analogWrite(pwmB, 200 + accel);
+//  analogWrite(pwmB, 200 + accel);
   analogWrite(pwmB, 200);
 }
 
@@ -409,7 +406,7 @@ void Go_Backward(void) { // Back
 void Turn_Left(void) { // Left
   digitalWrite(dirA, LOW);
   analogWrite(pwmA, 200);
-  digitalWrite(dirB, HIGH);
+   digitalWrite(dirB, HIGH);
   analogWrite(pwmB, 200);
 }
 
@@ -421,10 +418,10 @@ void Turn_Right(void) { // Right
 }
 
 void Stop_Drive(void) { // Stop
-  digitalWrite(dirA, LOW);
-  analogWrite(pwmA, 0);
-  digitalWrite(dirB, LOW);
-  analogWrite(pwmB, 0);
+   digitalWrite(dirA, LOW);
+   analogWrite(pwmA, 0);
+   digitalWrite(dirB, LOW);
+   analogWrite(pwmB, 0);
 
   // extern unsigned inr accel;
   // accel = 0;
