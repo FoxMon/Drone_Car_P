@@ -39,7 +39,7 @@ void Distance_Checking(){ //거리별 위험도격상
     changed_distance = false;
 
     static int level = 0;
-    if(level <= what_thing){
+    if(distance <= what_thing){
       level++;
 
       if(level == 10){
