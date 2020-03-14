@@ -135,7 +135,9 @@ void loop() {
       } else if(userInput == 'd'){ // Right
       // tAngleY = 10.0;
       } else if(userInput == 's') { // Balance
-      // tAngleY = 0.0;
+      // tAngleX = tAngleY = 0.0;
+      } else if(userInput == 'w') { // Forward
+      // tAngleX = -10.0;
       }
     }
   }
