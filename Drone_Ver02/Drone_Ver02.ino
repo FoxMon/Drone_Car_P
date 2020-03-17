@@ -7,7 +7,7 @@ GyroRawAdj adj;
 GyroRate rate;
 GyroAngle angle;
 Time t;
-Throttle throttle;
+Throttle throttle; // userInput -> decide throttle.value 
 BalanceForce force;
 TargetAngle tAngle;
 MotorPin motor_pin = { .pin1 = 3, .pin2 = 4, .pin3 = 5, .pin4 = 6 };
