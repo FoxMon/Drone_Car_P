@@ -7,21 +7,17 @@
 
 void setup(void) {
   Serial1.begin(9600); // Serial1 -> Bluetooth
+  Serial.begin(9600);
 }
 
 void loop(void) {
   if(Serial1.available()) {
-    char userInput = Serial.read();
+//    char userInput = Serial1.read();
 
-    Serial.println(userInput);
+    Serial1.println("HelloWorld!");
 
-    if(userInput >= '0' && userInput <= '9') { // read throttle value
-      int throttle = (userInput - '0') * 25; // ASCII
-
-      analogWrite(2, throttle);
-      analogWrite(3, throttle);
-      analogWrite(4, throttle);
-      analogWrite(5, throttle);
-    }
+//    if(userInput >= '0' && userInput <= '9') { // read throttle value
+//      int throttle = (userInput - '0') * 25; // ASCII
+//    }
   }
 }

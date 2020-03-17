@@ -155,4 +155,16 @@ void loop() {
   analogWrite(11, iSpeedB);
   analogWrite(12, iSpeedC);
   analogWrite(13, iSpeedD);
+
+  Serial.println(BalY);
+  Serial.println(BalX);
+  
+  
+
+//Serial.print("throttle : ");
+//Serial.println(throttle);
+//Serial.print("iSpeedA : ");
+//  Serial.println(iSpeedA);
+//  Serial.print("iSpeedC : ");
+//  Serial.println(iSpeedB);
 }
