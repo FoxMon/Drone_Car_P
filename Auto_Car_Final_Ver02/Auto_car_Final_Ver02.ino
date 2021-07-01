@@ -4,6 +4,8 @@
 #define LIMIT 600
 #define BRIGHT 200
 
+// auto_car
+
 const int trig = 8;
 const int echo = 9;
 const int buzzer_pin = 10;
